@@ -25,6 +25,12 @@ Desktop link launcher built with **Electron + React + Tailwind + better-sqlite3*
 
 ## Run locally
 
+### Requirements
+
+- Node.js **22 or newer** (`node -v`)
+
+### Start the app
+
 From repository root:
 
 ```bash
@@ -32,6 +38,14 @@ npm install
 npm --prefix renderer install
 npm run dev
 ```
+
+### Windows troubleshooting
+
+If a previous install failed, remove `node_modules` and `package-lock.json`, then install again.
+If `better-sqlite3` ever falls back to a local build on Windows, install Visual Studio Build Tools with:
+
+- **Desktop development with C++**
+- A recent **Windows SDK**
 
 ## Build renderer bundle
 
