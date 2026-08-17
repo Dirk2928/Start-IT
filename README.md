@@ -1,43 +1,46 @@
-# Link Launcher
+# Start-IT (Link Launcher)
 
-Lightweight Windows desktop app for managing personal website links and launching them quickly.
+Desktop link launcher built with **Electron + React + Tailwind + better-sqlite3**.
+
+## Tech stack
+
+- Electron (desktop shell)
+- React (UI)
+- Tailwind CSS (styling)
+- better-sqlite3 (local SQLite storage)
 
 ## Features
 
 - Add, edit, and delete links
-- Link fields: name, URL, optional icon/favicon text, optional category/tag
-- Launch one link or launch all saved links
-- Per-link browser override:
+- Optional groups for organizing links
+- Filter links by group
+- Launch selected links or launch all visible links
+- Per-link browser choice:
   - System Default
   - Google Chrome
   - Brave
   - Microsoft Edge
   - Mozilla Firefox
-- Local SQLite storage (offline, no login, no cloud)
-- Friendly empty states and clear, large-click UI controls
+- Offline local SQLite storage (no login or cloud required)
 
 ## Run locally
 
-```bash
-python /home/runner/work/Start-IT/Start-IT/link_launcher.py
-```
-
-## Build a single Windows `.exe`
-
-Install PyInstaller:
+From repository root:
 
 ```bash
-pip install pyinstaller
+npm install
+npm --prefix renderer install
+npm run dev
 ```
 
-Build:
+## Build renderer bundle
 
 ```bash
-pyinstaller --noconfirm --onefile --windowed --name "LinkLauncher" /home/runner/work/Start-IT/Start-IT/link_launcher.py
+npm run build
 ```
 
-Output executable:
+## Data storage
 
-- `dist/LinkLauncher.exe`
+The app stores data in SQLite under Electron's user data folder:
 
-No admin rights are required to run the app. SQLite data is stored per-user under `%LOCALAPPDATA%\LinkLauncher\links.db`.
+- `<userData>/data/links.db`
