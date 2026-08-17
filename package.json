@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Link launcher desktop app built with Electron, React, Tailwind, and SQLite",
   "main": "electron/main.cjs",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "concurrently \"npm --prefix renderer run dev\" \"wait-on tcp:5173 && electron .\"",
     "build": "npm --prefix renderer run build",
@@ -10,7 +13,7 @@
     "lint": "npm --prefix renderer run lint"
   },
   "dependencies": {
-    "better-sqlite3": "^11.8.1"
+    "better-sqlite3": "^13.0.3"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
