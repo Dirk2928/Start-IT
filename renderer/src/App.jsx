@@ -20,10 +20,13 @@ function App() {
   const [selectedIds, setSelectedIds] = useState([])
   const [filterGroupId, setFilterGroupId] = useState(null)
   const [newGroupName, setNewGroupName] = useState('')
-  const [status, setStatus] = useState('')
+  const [status, setStatus] = useState({ text: '', tone: 'success' })
   const [browserInfo, setBrowserInfo] = useState({ options: ['System Default'], detected: {} })
 
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds])
+
+  const showSuccess = (text) => setStatus({ text, tone: 'success' })
+  const showError = (text) => setStatus({ text, tone: 'error' })
 
   const loadGroups = async () => {
     const rows = await window.api.listGroups()
@@ -50,47 +53,55 @@ function App() {
   const onSave = async () => {
     const result = await window.api.saveLink(form)
     if (!result.ok) {
-      setStatus(result.message)
+      showError(result.message)
       return
     }
     setForm(emptyForm)
-    setStatus('Link saved.')
+    showSuccess('Link saved.')
     await loadLinks()
   }
 
   const onDelete = async () => {
     if (!selectedIds.length) {
-      setStatus('Select at least one link to delete.')
+      showError('Select at least one link to delete.')
       return
     }
     await window.api.deleteLinks(selectedIds)
-    setStatus('Selected link(s) deleted.')
+    showSuccess('Selected link(s) deleted.')
     await loadLinks()
   }
 
   const onLaunchSelected = async () => {
     if (!selectedIds.length) {
-      setStatus('Select at least one link to launch.')
+      showError('Select at least one link to launch.')
       return
     }
     const result = await window.api.launchSelected(selectedIds)
-    setStatus(result.errors?.length ? result.errors.slice(0, 6).join('\n') : 'Selected links launched.')
+    if (result.errors?.length) {
+      showError(result.errors.slice(0, 6).join('\n'))
+    } else {
+      showSuccess('Selected links launched.')
+    }
   }
 
   const onLaunchVisible = async () => {
     const result = await window.api.launchVisible(filterGroupId)
-    setStatus(result.errors?.length ? result.errors.slice(0, 6).join('\n') : 'Visible links launched.')
+    if (result.errors?.length) {
+      showError(result.errors.slice(0, 6).join('\n'))
+    } else {
+      showSuccess('Visible links launched.')
+    }
   }
 
   const onCreateGroup = async () => {
     const result = await window.api.createGroup(newGroupName)
     if (!result.ok) {
-      setStatus(result.message)
+      showError(result.message)
       return
     }
     const createdName = newGroupName.trim()
     setNewGroupName('')
-    setStatus('Group created.')
+    showSuccess('Group created.')
     const refreshed = await loadGroups()
     const created = refreshed.find((group) => group.name === createdName)
     if (created) {
@@ -358,9 +369,9 @@ function App() {
               {form.id ? 'Update Link' : 'Save Link'}
             </button>
 
-            {status && (
-              <div className={`status-message ${status.includes('error') || status.includes('Select') ? 'error' : 'success'}`}>
-                {status}
+            {status.text && (
+              <div className={`status-message ${status.tone}`}>
+                {status.text}
               </div>
             )}
           </div>

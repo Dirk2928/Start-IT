@@ -52,6 +52,9 @@ function queryAll(db, sql, params = []) {
   const rows = [];
 
   try {
+    if (params && params.length) {
+      statement.bind(params);
+    }
     while (statement.step()) {
       rows.push(statement.getAsObject());
     }

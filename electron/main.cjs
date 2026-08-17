@@ -5,7 +5,10 @@ const fs = require('fs');
 const { createStore, BROWSER_DEFAULT, BROWSER_OPTIONS } = require('./store.cjs');
 
 const builtAppPath = path.join(__dirname, '../renderer/dist/index.html');
-const isDev = !app.isPackaged && !fs.existsSync(builtAppPath);
+// Drive dev mode off the npm script name (`npm run dev`) rather than the mere
+// presence of a build, so a stale renderer/dist folder can't shadow the Vite
+// dev server during development.
+const isDev = !app.isPackaged && process.env.npm_lifecycle_event === 'dev';
 let mainWindow;
 let store;
 

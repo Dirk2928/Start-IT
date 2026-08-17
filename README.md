@@ -1,6 +1,6 @@
 # Start-IT (Link Launcher)
 
-Desktop link launcher built with **Electron + React + better-sqlite3**.
+Desktop link launcher built with **Electron + React + sql.js**.
 
 ## Overview
 
@@ -57,6 +57,7 @@ From the project root:
 
 ```bash
 npm install
+npm --prefix renderer install
 npm run dist
 ```
 

@@ -1,13 +1,22 @@
+# Dependencies
 node_modules/
 renderer/node_modules/
-renderer/dist/
+
+# Build output
 dist/
+out/
+release/
+renderer/dist/
+*.exe
+
+# Local database
 *.db
 *.sqlite
 *.sqlite3
+
+# Python
+__pycache__/
+*.pyc
+
+# OS files
 .DS_Store
-  # Build output
-  release/
-  dist/
-  out/
-  *.exe
