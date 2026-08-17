@@ -4,7 +4,8 @@ const { spawn, spawnSync } = require('child_process');
 const fs = require('fs');
 const { createStore, BROWSER_DEFAULT, BROWSER_OPTIONS } = require('./store.cjs');
 
-const isDev = !app.isPackaged;
+const builtAppPath = path.join(__dirname, '../renderer/dist/index.html');
+const isDev = !app.isPackaged && !fs.existsSync(builtAppPath);
 let mainWindow;
 let store;
 
@@ -80,7 +81,7 @@ function createWindow() {
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/dist/index.html'));
+    mainWindow.loadFile(builtAppPath);
   }
 }
 
@@ -127,8 +128,8 @@ async function launchLink(link) {
   return { ok: true, error: '' };
 }
 
-app.whenReady().then(() => {
-  store = createStore();
+app.whenReady().then(async () => {
+  store = await createStore();
 
   ipcMain.handle('groups:list', () => store.listGroups());
   ipcMain.handle('groups:create', (_event, name) => store.createGroup(name));

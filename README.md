@@ -1,37 +1,41 @@
 # Start-IT (Link Launcher)
 
-Desktop link launcher built with **Electron + React + Tailwind + better-sqlite3**.
+Desktop link launcher built with **Electron + React + better-sqlite3**.
 
-## Tech stack
+## Overview
 
-- Electron (desktop shell)
-- React (UI)
-- Tailwind CSS (styling)
-- better-sqlite3 (local SQLite storage)
+Start-IT lets you store, organize, and launch your favorite links from a single local desktop app. It keeps everything on the machine in a local SQLite database and supports per-link browser selection.
 
 ## Features
 
 - Add, edit, and delete links
-- Optional groups for organizing links
+- Organize links into named groups
 - Filter links by group
 - Launch selected links or launch all visible links
-- Per-link browser choice:
+- Per-link browser selection:
   - System Default
   - Google Chrome
   - Brave
   - Microsoft Edge
   - Mozilla Firefox
-- Offline local SQLite storage (no login or cloud required)
+- Local SQLite data storage with no login or cloud service required
 
-## Run locally
+## Tech stack
 
-### Requirements
+- Electron
+- React
+- Vite
+- sql.js (pure JavaScript SQLite engine for zero native compilation issues)
 
-- Node.js **22 or newer** (`node -v`)
+## Requirements
 
-### Start the app
+- Node.js **22 or newer**
+- Windows 10/11 for the packaged EXE
+- A desktop session for running the Electron app locally
 
-From repository root:
+## Run locally in development
+
+From the project root:
 
 ```bash
 npm install
@@ -39,22 +43,52 @@ npm --prefix renderer install
 npm run dev
 ```
 
-### Windows troubleshooting
+This starts the Vite renderer and launches the Electron desktop app.
 
-If a previous install failed, remove `node_modules` and `package-lock.json`, then install again.
-If `better-sqlite3` ever falls back to a local build on Windows, install Visual Studio Build Tools with:
-
-- **Desktop development with C++**
-- A recent **Windows SDK**
-
-## Build renderer bundle
+## Build the renderer bundle
 
 ```bash
 npm run build
 ```
 
+## Create a Windows EXE
+
+From the project root:
+
+```bash
+npm install
+npm run dist
+```
+
+This creates a portable Windows executable in the `release` folder.
+
+## Windows troubleshooting
+
+If Electron reports that the binary was not installed correctly:
+
+```bash
+rmdir /s /q node_modules\electron
+rmdir /s /q node_modules
+del package-lock.json
+npm install
+```
+
+If the app still does not launch, remove the existing user data folder before retrying:
+
+```bash
+rmdir /s /q %APPDATA%\Start-IT
+```
+
 ## Data storage
 
-The app stores data in SQLite under Electron's user data folder:
+The app stores data in Electron user data storage under a SQLite database:
 
-- `<userData>/data/links.db`
+- Local app data path for the installed app
+- inside that folder: `data/links.db`
+
+## Project structure
+
+- `electron/` — Electron main process and local DB layer
+- `renderer/` — React + Vite frontend
+- `release/` — generated Windows executables
+

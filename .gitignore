@@ -6,3 +6,8 @@ dist/
 *.sqlite
 *.sqlite3
 .DS_Store
+  # Build output
+  release/
+  dist/
+  out/
+  *.exe

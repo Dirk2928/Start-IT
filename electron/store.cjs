@@ -1,7 +1,7 @@
-const Database = require('better-sqlite3');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
 const { app } = require('electron');
+const initSqlJs = require('sql.js');
 
 const BROWSER_DEFAULT = 'System Default';
 const BROWSER_OPTIONS = [
@@ -19,11 +19,66 @@ function getDbPath() {
   return path.join(dbDir, 'links.db');
 }
 
-function createStore() {
-  const db = new Database(getDbPath());
-  db.pragma('journal_mode = WAL');
+async function getSqlInstance() {
+  const wasmPath = path.join(__dirname, '..', 'node_modules', 'sql.js', 'dist', 'sql-wasm.wasm');
+  return initSqlJs({
+    locateFile: (file) => {
+      if (file.endsWith('.wasm')) {
+        return wasmPath;
+      }
+      return path.join(__dirname, '..', 'node_modules', 'sql.js', 'dist', file);
+    },
+  });
+}
 
-  db.exec(`
+function readDbFile(Sql, dbPath) {
+  if (!fs.existsSync(dbPath)) {
+    return new Sql.Database();
+  }
+
+  const buffer = fs.readFileSync(dbPath);
+  return new Sql.Database(new Uint8Array(buffer));
+}
+
+function saveDatabase(db, dbPath) {
+  const data = db.export();
+  if (data) {
+    fs.writeFileSync(dbPath, Buffer.from(data));
+  }
+}
+
+function queryAll(db, sql, params = []) {
+  const statement = db.prepare(sql);
+  const rows = [];
+
+  try {
+    while (statement.step()) {
+      rows.push(statement.getAsObject());
+    }
+  } finally {
+    statement.free();
+  }
+
+  return rows.map((row) => {
+    const cleaned = {};
+    for (const [key, value] of Object.entries(row)) {
+      cleaned[key] = value === null || value === undefined ? null : value;
+    }
+    return cleaned;
+  });
+}
+
+function queryOne(db, sql, params = []) {
+  const rows = queryAll(db, sql, params);
+  return rows[0] || null;
+}
+
+async function createStore() {
+  const Sql = await getSqlInstance();
+  const dbPath = getDbPath();
+  const db = readDbFile(Sql, dbPath);
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS groups (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE
@@ -40,27 +95,11 @@ function createStore() {
       FOREIGN KEY(group_id) REFERENCES groups(id) ON DELETE SET NULL
     );
   `);
-
-  const listGroupsStmt = db.prepare('SELECT id, name FROM groups ORDER BY LOWER(name) ASC');
-  const createGroupStmt = db.prepare('INSERT INTO groups(name) VALUES (?)');
-  const listLinksBase = `
-    SELECT l.id, l.name, l.url, l.icon, l.browser, l.group_id AS groupId, g.name AS groupName
-    FROM links l
-    LEFT JOIN groups g ON g.id = l.group_id
-  `;
-  const listLinksStmt = db.prepare(`${listLinksBase} ORDER BY LOWER(l.name) ASC`);
-  const listLinksByGroupStmt = db.prepare(`${listLinksBase} WHERE l.group_id = ? ORDER BY LOWER(l.name) ASC`);
-  const getLinkStmt = db.prepare(`${listLinksBase} WHERE l.id = ?`);
-  const insertLinkStmt = db.prepare(
-    'INSERT INTO links(name, url, icon, browser, group_id) VALUES (?, ?, ?, ?, ?)'
-  );
-  const updateLinkStmt = db.prepare(
-    'UPDATE links SET name = ?, url = ?, icon = ?, browser = ?, group_id = ? WHERE id = ?'
-  );
+  saveDatabase(db, dbPath);
 
   return {
     listGroups() {
-      return listGroupsStmt.all();
+      return queryAll(db, 'SELECT id, name FROM groups ORDER BY LOWER(name) ASC');
     },
     createGroup(name) {
       const trimmed = String(name || '').trim();
@@ -68,23 +107,36 @@ function createStore() {
         return { ok: false, message: 'Please enter a group name.' };
       }
       try {
-        const result = createGroupStmt.run(trimmed);
-        return { ok: true, id: Number(result.lastInsertRowid), message: '' };
+        db.run('INSERT INTO groups(name) VALUES (?)', [trimmed]);
+        saveDatabase(db, dbPath);
+        const created = queryOne(db, 'SELECT id FROM groups WHERE name = ? ORDER BY id DESC LIMIT 1', [trimmed]);
+        return { ok: true, id: Number(created?.id ?? 0), message: '' };
       } catch (error) {
-        if (error && error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+        const message = String(error?.message || error || '');
+        if (/UNIQUE|constraint/i.test(message)) {
           return { ok: false, message: 'A group with this name already exists.' };
         }
         throw error;
       }
     },
     listLinks(groupId) {
+      const baseQuery = `
+        SELECT l.id, l.name, l.url, l.icon, l.browser, l.group_id AS groupId, g.name AS groupName
+        FROM links l
+        LEFT JOIN groups g ON g.id = l.group_id
+      `;
       if (groupId == null) {
-        return listLinksStmt.all();
+        return queryAll(db, `${baseQuery} ORDER BY LOWER(l.name) ASC`);
       }
-      return listLinksByGroupStmt.all(groupId);
+      return queryAll(db, `${baseQuery} WHERE l.group_id = ? ORDER BY LOWER(l.name) ASC`, [groupId]);
     },
     getLink(linkId) {
-      return getLinkStmt.get(linkId) || null;
+      const baseQuery = `
+        SELECT l.id, l.name, l.url, l.icon, l.browser, l.group_id AS groupId, g.name AS groupName
+        FROM links l
+        LEFT JOIN groups g ON g.id = l.group_id
+      `;
+      return queryOne(db, `${baseQuery} WHERE l.id = ?`, [linkId]);
     },
     upsertLink(link) {
       const browser = BROWSER_OPTIONS.includes(link.browser) ? link.browser : BROWSER_DEFAULT;
@@ -97,19 +149,24 @@ function createStore() {
       ];
 
       if (link.id == null) {
-        const result = insertLinkStmt.run(...payload);
-        return Number(result.lastInsertRowid);
+        db.run('INSERT INTO links(name, url, icon, browser, group_id) VALUES (?, ?, ?, ?, ?)', payload);
+        saveDatabase(db, dbPath);
+        const created = queryOne(db, 'SELECT id FROM links ORDER BY id DESC LIMIT 1');
+        return Number(created?.id ?? 0);
       }
 
-      updateLinkStmt.run(...payload, link.id);
+      db.run('UPDATE links SET name = ?, url = ?, icon = ?, browser = ?, group_id = ? WHERE id = ?', [...payload, link.id]);
+      saveDatabase(db, dbPath);
       return Number(link.id);
     },
     deleteLinks(ids) {
       if (!Array.isArray(ids) || ids.length === 0) {
         return;
       }
-      const placeholders = ids.map(() => '?').join(',');
-      db.prepare(`DELETE FROM links WHERE id IN (${placeholders})`).run(...ids.map(Number));
+      const params = ids.map(Number);
+      const placeholders = params.map(() => '?').join(',');
+      db.run(`DELETE FROM links WHERE id IN (${placeholders})`, params);
+      saveDatabase(db, dbPath);
     },
   };
 }

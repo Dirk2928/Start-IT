@@ -1,7 +1,8 @@
 {
   "name": "start-it",
   "version": "1.0.0",
-  "description": "Link launcher desktop app built with Electron, React, Tailwind, and SQLite",
+  "description": "Link launcher desktop app built with Electron, React, and SQLite",
+  "author": "Start-IT",
   "main": "electron/main.cjs",
   "engines": {
     "node": ">=22"
@@ -9,15 +10,44 @@
   "scripts": {
     "dev": "concurrently \"npm --prefix renderer run dev\" \"wait-on tcp:5173 && electron .\"",
     "build": "npm --prefix renderer run build",
-    "start": "electron .",
-    "lint": "npm --prefix renderer run lint"
+    "start": "npm run build && electron .",
+    "lint": "npm --prefix renderer run lint",
+    "dist": "electron-builder --win portable"
   },
   "dependencies": {
-    "better-sqlite3": "^13.0.3"
+    "sql.js": "^1.13.0"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
     "electron": "^33.4.11",
+    "electron-builder": "^25.1.4",
     "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "com.startit.linklauncher",
+    "productName": "Start-IT",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "renderer/dist/**/*",
+      "package.json",
+      "node_modules/**/*",
+      "!**/*.map",
+      "!renderer/src/**",
+      "!renderer/public/**",
+      "!test/**",
+      "!**/.gitignore",
+      "!**/README.md"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "sign": false,
+      "signAndEditExecutable": false,
+      "artifactName": "Start-IT-${version}-portable.exe"
+    }
   }
 }
