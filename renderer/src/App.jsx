@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import './App.css'
 
 const NO_GROUP = 'No Group'
 const ALL_GROUPS = 'All Groups'
@@ -115,62 +116,82 @@ function App() {
       : `Detected browsers: ${Object.keys(browserInfo.detected).sort().join(', ')}`
 
   return (
-    <main className="min-h-screen bg-slate-100 p-6 text-slate-800">
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 xl:grid-cols-[2fr,1fr]">
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h1 className="text-3xl font-bold">Link Launcher</h1>
-              <p className="text-sm text-slate-500">Create groups, save links, and launch them quickly.</p>
+    <div className="app-container">
+      <header className="app-header">
+        <div className="header-content">
+          <div className="logo-section">
+            <div className="logo-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              </svg>
             </div>
-            <button
-              type="button"
-              onClick={onLaunchVisible}
-              className="rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-700"
-            >
-              Launch Visible
-            </button>
+            <div>
+              <h1>Link Launcher</h1>
+              <p>Organize and launch your favorite links effortlessly</p>
+            </div>
+          </div>
+          <button type="button" onClick={onLaunchVisible} className="btn btn-primary glow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="btn-icon">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+            Launch Visible
+          </button>
+        </div>
+      </header>
+
+      <main className="main-content">
+        <section className="card links-section">
+          <div className="section-header">
+            <h2>Your Links</h2>
+            <div className="filter-group">
+              <label htmlFor="filter-select">Filter by group</label>
+              <select
+                id="filter-select"
+                className="input-field"
+                value={filterGroupId ?? ''}
+                onChange={(event) => onFilterGroupChange(event.target.value)}
+              >
+                <option value="">{ALL_GROUPS}</option>
+                {groups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <label className="text-sm font-medium">Filter group</label>
-            <select
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2"
-              value={filterGroupId ?? ''}
-              onChange={(event) => onFilterGroupChange(event.target.value)}
-            >
-              <option value="">{ALL_GROUPS}</option>
-              {groups.map((group) => (
-                <option key={group.id} value={group.id}>
-                  {group.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="min-w-full border-collapse text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+          <div className="table-container">
+            <table className="modern-table">
+              <thead>
                 <tr>
-                  <th className="px-4 py-3">Sel</th>
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">URL</th>
-                  <th className="px-4 py-3">Group</th>
-                  <th className="px-4 py-3">Browser</th>
+                  <th className="col-select">Select</th>
+                  <th className="col-name">Name</th>
+                  <th className="col-url">URL</th>
+                  <th className="col-group">Group</th>
+                  <th className="col-browser">Browser</th>
                 </tr>
               </thead>
               <tbody>
                 {links.length === 0 ? (
                   <tr>
-                    <td className="px-4 py-8 text-center text-slate-500" colSpan={5}>
-                      No links yet. Add one from the form.
+                    <td className="empty-state" colSpan={5}>
+                      <div className="empty-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <path d="M13.828 10.172a4 4 0 0 0-5.656 0l-4 4a4 4 0 1 0 5.656 5.656l1.102-1.101m-.758-4.899a4 4 0 0 0 5.656 0l4-4a4 4 0 0 0-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                      </div>
+                      <p>No links yet. Add one from the form.</p>
                     </td>
                   </tr>
                 ) : (
                   links.map((link) => (
                     <tr
                       key={link.id}
-                      className={`border-t border-slate-200 ${selectedSet.has(link.id) ? 'bg-indigo-50' : 'bg-white'}`}
+                      className={`link-row ${selectedSet.has(link.id) ? 'selected' : ''}`}
                       onClick={() =>
                         setForm({
                           id: link.id,
@@ -182,18 +203,27 @@ function App() {
                         })
                       }
                     >
-                      <td className="px-4 py-3">
+                      <td className="col-select">
                         <input
                           type="checkbox"
                           checked={selectedSet.has(link.id)}
                           onChange={() => onToggleSelect(link.id)}
                           onClick={(event) => event.stopPropagation()}
+                          className="checkbox-custom"
                         />
                       </td>
-                      <td className="px-4 py-3 font-medium">{link.name}</td>
-                      <td className="px-4 py-3 text-slate-600">{link.url}</td>
-                      <td className="px-4 py-3">{link.groupName || NO_GROUP}</td>
-                      <td className="px-4 py-3">{link.browser}</td>
+                      <td className="col-name">
+                        <span className="link-name">{link.name}</span>
+                      </td>
+                      <td className="col-url">
+                        <span className="link-url">{link.url}</span>
+                      </td>
+                      <td className="col-group">
+                        <span className="badge">{link.groupName || NO_GROUP}</span>
+                      </td>
+                      <td className="col-browser">
+                        <span className="browser-tag">{link.browser}</span>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -201,65 +231,74 @@ function App() {
             </table>
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={onLaunchSelected}
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold hover:bg-slate-50"
-            >
+          <div className="action-bar">
+            <button type="button" onClick={onLaunchSelected} className="btn btn-secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="btn-icon">
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
               Launch Selected
             </button>
-            <button
-              type="button"
-              onClick={onDelete}
-              className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 font-semibold text-red-700 hover:bg-red-100"
-            >
+            <button type="button" onClick={onDelete} className="btn btn-danger">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="btn-icon">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
               Delete Selected
             </button>
-            <button
-              type="button"
-              onClick={() => setForm(emptyForm)}
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold hover:bg-slate-50"
-            >
+            <button type="button" onClick={() => setForm(emptyForm)} className="btn btn-ghost">
               Clear Form
             </button>
           </div>
         </section>
 
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-xl font-bold">Link Details</h2>
-          <div className="space-y-3">
-            <label className="block text-sm font-medium">
-              Name*
+        <section className="card form-section">
+          <div className="form-header">
+            <h2>{form.id ? 'Edit Link' : 'Add New Link'}</h2>
+            <div className="form-indicator"></div>
+          </div>
+
+          <div className="form-body">
+            <div className="form-group">
+              <label htmlFor="name-input">Link Name <span className="required">*</span></label>
               <input
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                id="name-input"
+                type="text"
+                className="input-field"
+                placeholder="e.g., Google Drive"
                 value={form.name}
                 onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
               />
-            </label>
+            </div>
 
-            <label className="block text-sm font-medium">
-              URL*
+            <div className="form-group">
+              <label htmlFor="url-input">URL <span className="required">*</span></label>
               <input
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                id="url-input"
+                type="text"
+                className="input-field"
+                placeholder="https://example.com"
                 value={form.url}
                 onChange={(event) => setForm((current) => ({ ...current, url: event.target.value }))}
               />
-            </label>
+            </div>
 
-            <label className="block text-sm font-medium">
-              Icon/Favicon (optional)
+            <div className="form-group">
+              <label htmlFor="icon-input">Icon/Favicon URL <span className="optional">(optional)</span></label>
               <input
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                id="icon-input"
+                type="text"
+                className="input-field"
+                placeholder="https://example.com/favicon.ico"
                 value={form.icon}
                 onChange={(event) => setForm((current) => ({ ...current, icon: event.target.value }))}
               />
-            </label>
+            </div>
 
-            <label className="block text-sm font-medium">
-              Group
+            <div className="form-group">
+              <label htmlFor="group-select">Group</label>
               <select
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                id="group-select"
+                className="input-field"
                 value={form.groupId ?? ''}
                 onChange={(event) =>
                   setForm((current) => ({ ...current, groupId: event.target.value === '' ? null : Number(event.target.value) }))
@@ -272,28 +311,32 @@ function App() {
                   </option>
                 ))}
               </select>
-            </label>
-
-            <div className="grid grid-cols-[1fr,auto] gap-2">
-              <input
-                className="rounded-lg border border-slate-300 px-3 py-2"
-                placeholder="New group name"
-                value={newGroupName}
-                onChange={(event) => setNewGroupName(event.target.value)}
-              />
-              <button
-                type="button"
-                onClick={onCreateGroup}
-                className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold hover:bg-slate-50"
-              >
-                Create
-              </button>
             </div>
 
-            <label className="block text-sm font-medium">
-              Browser
+            <div className="form-group">
+              <label>Create New Group</label>
+              <div className="input-group">
+                <input
+                  type="text"
+                  className="input-field input-inline"
+                  placeholder="Enter group name"
+                  value={newGroupName}
+                  onChange={(event) => setNewGroupName(event.target.value)}
+                />
+                <button type="button" onClick={onCreateGroup} className="btn btn-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="browser-select">Browser</label>
               <select
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                id="browser-select"
+                className="input-field"
                 value={form.browser}
                 onChange={(event) => setForm((current) => ({ ...current, browser: event.target.value }))}
               >
@@ -303,23 +346,27 @@ function App() {
                   </option>
                 ))}
               </select>
-            </label>
+              <p className="helper-text">{detectedBrowsersText}</p>
+            </div>
 
-            <p className="text-xs text-slate-500">{detectedBrowsersText}</p>
-
-            <button
-              type="button"
-              onClick={onSave}
-              className="w-full rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-700"
-            >
-              Save Link
+            <button type="button" onClick={onSave} className="btn btn-primary btn-full">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="btn-icon">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
+              {form.id ? 'Update Link' : 'Save Link'}
             </button>
 
-            <p className="min-h-10 whitespace-pre-line text-sm font-medium text-emerald-700">{status}</p>
+            {status && (
+              <div className={`status-message ${status.includes('error') || status.includes('Select') ? 'error' : 'success'}`}>
+                {status}
+              </div>
+            )}
           </div>
         </section>
-      </div>
-    </main>
+      </main>
+    </div>
   )
 }
 
