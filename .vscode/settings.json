@@ -1,0 +1,19 @@
+{
+  // Keep VS Code from watching, indexing, or displaying build output.
+  // This prevents the editor from holding a file handle on artifacts like
+  // release/win-unpacked/resources/app.asar, which would otherwise make
+  // `npm run dist` fail with "the process cannot access the file...".
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/release/**": true,
+    "**/renderer/dist/**": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/release": true,
+    "**/renderer/dist": true
+  },
+  "files.exclude": {
+    "**/release/win-unpacked": true
+  }
+}
