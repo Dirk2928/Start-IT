@@ -1,13 +1,37 @@
-node_modules/
-renderer/node_modules/
-renderer/dist/
+```
+# Electron build artifacts
+release/
 dist/
-*.db
-*.sqlite
-*.sqlite3
+build/
+
+# Executables and binaries
+*.exe
+*.dll
+*.so
+*.dylib
+*.bin
+
+# Electron-specific files
+*.asar
+resources.pak
+chrome_*.pak
+icudtl.dat
+snapshot_blob.bin
+v8_context_snapshot.bin
+
+# Temporary files
+*.tmp
+*.temp
+
+# Logs
+*.log
+
+# OS-specific files
 .DS_Store
-  # Build output
-  release/
-  dist/
-  out/
-  *.exe
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+*.env.*
+```
